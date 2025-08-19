@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prototipo de App Bíblica (UI Mejorada)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script>
+        // Configuración personalizada de Tailwind para extender la paleta de colores
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-primary': '#4f46e5', // Indigo
+                        'brand-secondary': '#111827', // Gray-900
+                        'brand-light': '#f9fafb', // Gray-50
+                        'brand-text': '#374151', // Gray-700
+                        'brand-subtle': '#6b7280', // Gray-500
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Estilos personalizados */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9fafb; /* Usando 'brand-light' */
+            color: #374151; /* Usando 'brand-text' */
+        }
+        .font-serif {
+            font-family: 'Merriweather', serif;
+        }
+        .hebrew-text {
+            font-size: 1.6rem;
+            direction: rtl;
+        }
+        /* Estilos para los selectores modernos */
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.2em;
+        }
+        /* Transiciones suaves para todos los elementos */
+        .page, .verse, button, select {
+            transition: all 0.2s ease-in-out;
+        }
+        /* Efecto de "levantar" al pasar el mouse sobre un versículo */
+        .verse:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+    </style>
+</head>
+<body class="bg-brand-light text-brand-text">
+
+    <div class="container mx-auto p-4 sm:p-6 md:p-10 max-w-5xl">
+        <!-- Encabezado de la aplicación -->
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold text-brand-secondary">Estudio Bíblico Interactivo</h1>
+            <p class="text-brand-subtle mt-3 text-lg">Una nueva forma de profundizar en las Escrituras</p>
+        </header>
+
+        <main>
+            <!-- PÁGINA DE LECTURA -->
+            <div id="reading-page" class="page">
+                <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+                    <!-- Selectores de Navegación -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div>
+                            <label for="testament-select" class="block text-sm font-medium text-brand-subtle mb-1">Testamento</label>
+                            <select id="testament-select" class="w-full p-3 text-base border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary"></select>
+                        </div>
+                        <div>
+                            <label for="book-select" class="block text-sm font-medium text-brand-subtle mb-1">Libro</label>
+                            <select id="book-select" class="w-full p-3 text-base border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary"></select>
+                        </div>
+                        <div>
+                            <label for="chapter-select" class="block text-sm font-medium text-brand-subtle mb-1">Capítulo</label>
+                            <select id="chapter-select" class="w-full p-3 text-base border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary"></select>
+                        </div>
+                    </div>
+
+                    <h2 id="chapter-title" class="text-3xl font-bold font-serif border-b border-gray-200 pb-4 mb-6 text-brand-secondary"></h2>
+                    <div id="verses-container" class="space-y-2 text-lg font-serif leading-relaxed max-h-[55vh] overflow-y-auto pr-3">
+                        <!-- Los versículos se insertarán aquí dinámicamente -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- PÁGINA DE ANÁLISIS (inicialmente oculta) -->
+            <div id="analysis-page" class="page hidden">
+                <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+                    <button id="back-to-reading-btn" class="mb-6 inline-flex items-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-brand-primary hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary hover:-translate-y-0.5 transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                        Volver a la lectura
+                    </button>
+                    <div id="analysis-content">
+                        <!-- El contenido del análisis se insertará aquí -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- BASE DE DATOS (HARDCODEADA) ---
+        const bibleData = {
+            "Antiguo Testamento": {
+                "Génesis": {
+                    "1": [
+                        { verse: 1, text: "En el principio creó Dios los cielos y la tierra.", words: [{ hebrew: "בְּרֵאשִׁ֖ית", transliteration: "Bereshit", spanish: "En el principio" }, { hebrew: "בָּרָ֣א", transliteration: "bara", spanish: "creó" }, { hebrew: "אֱלֹהִ֑ים", transliteration: "Elohim", spanish: "Dios" }] },
+                        { verse: 2, text: "Y la tierra estaba desordenada y vacía...", words: [{ hebrew: "וְהָאָ֗רֶץ", transliteration: "veha'arets", spanish: "Y la tierra" }, { hebrew: "הָיְתָ֥ה", transliteration: "hayeta", spanish: "estaba" }] }
+                    ],
+                    "2": [
+                        { verse: 1, text: "Fueron, pues, acabados los cielos y la tierra...", words: [{ hebrew: "וַיְכֻלּ֛וּ", transliteration: "Vayechulu", spanish: "Y fueron acabados" }] },
+                    ]
+                },
+                "Éxodo": {
+                    "1": [
+                        { verse: 1, text: "Estos son los nombres de los hijos de Israel...", words: [{ hebrew: "וְאֵ֗לֶּה", transliteration: "Ve'eleh", spanish: "Y estos son" }] },
+                    ]
+                }
+            },
+            "Nuevo Testamento": {
+                "Mateo": {
+                    "1": [
+                        { verse: 1, text: "Libro de la genealogía de Jesucristo, hijo de David, hijo de Abraham.", words: [{ greek: "Βίβλος", transliteration: "Biblos", spanish: "Libro" }, { greek: "γενέσεως", transliteration: "geneseos", spanish: "de la genealogía" }] }
+                    ]
+                }
+            }
+        };
+
+        // --- LÓGICA DE LA APLICACIÓN ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const readingPage = document.getElementById('reading-page');
+            const analysisPage = document.getElementById('analysis-page');
+            const testamentSelect = document.getElementById('testament-select');
+            const bookSelect = document.getElementById('book-select');
+            const chapterSelect = document.getElementById('chapter-select');
+            const chapterTitle = document.getElementById('chapter-title');
+            const versesContainer = document.getElementById('verses-container');
+            const analysisContent = document.getElementById('analysis-content');
+            const backToReadingBtn = document.getElementById('back-to-reading-btn');
+            
+            function populateTestamentSelector() {
+                const testaments = Object.keys(bibleData);
+                testamentSelect.innerHTML = testaments.map(t => `<option value="${t}">${t}</option>`).join('');
+            }
+
+            function populateBookSelector(testament) {
+                const books = Object.keys(bibleData[testament]);
+                bookSelect.innerHTML = books.map(book => `<option value="${book}">${book}</option>`).join('');
+            }
+
+            function populateChapterSelector(testament, book) {
+                const chapters = Object.keys(bibleData[testament][book]);
+                chapterSelect.innerHTML = chapters.map(ch => `<option value="${ch}">${ch}</option>`).join('');
+            }
+
+            function renderBibleText(testament, book, chapter) {
+                chapterTitle.textContent = `${book} ${chapter}`;
+                const verses = bibleData[testament][book][chapter];
+                versesContainer.innerHTML = verses.map(verseData => `
+                    <p class="verse p-3 rounded-lg cursor-pointer" data-verse="${verseData.verse}">
+                        <sup class="font-bold text-sm text-brand-subtle mr-2">${verseData.verse}</sup>
+                        ${verseData.text}
+                    </p>
+                `).join('');
+                versesContainer.scrollTop = 0;
+            }
+
+            function showVerseAnalysis(testament, book, chapter, verseNumber) {
+                const verseData = bibleData[testament][book][chapter].find(v => v.verse == verseNumber);
+                if (!verseData) return;
+
+                let analysisHtml = `
+                    <h3 class="text-3xl font-bold font-serif mb-6 border-b border-gray-200 pb-4 text-brand-secondary">Análisis de ${book} ${chapter}:${verseNumber}</h3>
+                    <div class="space-y-4 overflow-y-auto max-h-[65vh] pr-3">
+                `;
+                verseData.words.forEach(word => {
+                    const originalLang = word.hebrew ? 'hebrew' : 'greek';
+                    const originalText = word.hebrew || word.greek;
+                    analysisHtml += `
+                        <div class="grid grid-cols-[1fr_1fr_1.5fr] gap-4 items-center border-b border-gray-100 py-4">
+                            <div class="${originalLang}-text font-bold text-right text-brand-secondary pr-4">${originalText}</div>
+                            <div class="text-brand-subtle text-center text-lg">${word.transliteration}</div>
+                            <div class="text-brand-text font-medium text-lg pl-4">${word.spanish}</div>
+                        </div>
+                    `;
+                });
+                analysisHtml += `</div>`;
+                analysisContent.innerHTML = analysisHtml;
+            }
+
+            function goToAnalysisPage() {
+                readingPage.classList.add('hidden');
+                analysisPage.classList.remove('hidden');
+            }
+
+            function goToReadingPage() {
+                analysisPage.classList.add('hidden');
+                readingPage.classList.remove('hidden');
+            }
+
+            function updateNavigationAndRender() {
+                const selectedTestament = testamentSelect.value;
+                const selectedBook = bookSelect.value;
+                const selectedChapter = chapterSelect.value;
+                renderBibleText(selectedTestament, selectedBook, selectedChapter);
+            }
+
+            testamentSelect.addEventListener('change', () => {
+                const selectedTestament = testamentSelect.value;
+                populateBookSelector(selectedTestament);
+                populateChapterSelector(selectedTestament, bookSelect.value);
+                updateNavigationAndRender();
+            });
+
+            bookSelect.addEventListener('change', () => {
+                const selectedTestament = testamentSelect.value;
+                populateChapterSelector(selectedTestament, bookSelect.value);
+                updateNavigationAndRender();
+            });
+
+            chapterSelect.addEventListener('change', updateNavigationAndRender);
+
+            versesContainer.addEventListener('click', (e) => {
+                const verseElement = e.target.closest('.verse');
+                if (verseElement) {
+                    const verseNumber = verseElement.dataset.verse;
+                    showVerseAnalysis(testamentSelect.value, bookSelect.value, chapterSelect.value, verseNumber);
+                    goToAnalysisPage();
+                }
+            });
+
+            backToReadingBtn.addEventListener('click', goToReadingPage);
+
+            function initializeApp() {
+                populateTestamentSelector();
+                populateBookSelector(testamentSelect.value);
+                populateChapterSelector(testamentSelect.value, bookSelect.value);
+                updateNavigationAndRender();
+            }
+
+            initializeApp();
+        });
+    </script>
+</body>
+</html>
